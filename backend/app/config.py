@@ -23,6 +23,12 @@ CHAT_MODELS = [
 ]
 
 COLLECTION_NAME = "property_knowledge"
+# Vector distance: lower = more similar. Measured on our data: related documents
+# score below ~0.8, unrelated ones above ~1.1.
+MAX_CONTEXT_DISTANCE = 1.0        # documents further than this are not given to the model
+MAX_SOURCE_DISTANCE = 0.7         # documents further than this are not shown as source links
+MAX_SOURCE_LINKS = 4              # source links shown under an answer
+ANSWER_CACHE_SIZE = 200           # repeated questions are answered from memory
 SEARCH_RESULTS_COUNT = 6          # knowledge chunks given to the model per question
 EXAMPLE_LISTINGS_COUNT = 5        # Wasalt listings shown as examples per question
 MAX_HISTORY_MESSAGES = 6          # previous chat turns sent with each question

@@ -6,3 +6,5 @@ frontend/dist
 scratch
 scraper
 .git
+backend/tests
+.github

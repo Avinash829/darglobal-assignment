@@ -9,17 +9,29 @@ Run locally:  uvicorn app.main:app --reload --port 7860   (from the backend/ fol
 """
 
 import json
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
+from app import knowledge_base, listings
 from app.chat import answer_question
 from app.config import FRONTEND_BUILD_DIR
 from app.llm import AllModelsFailedError
 
-app = FastAPI(title="DarGlobal & Wasalt Property Assistant")
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    """Load the embedding model, the vector index and the listings once at startup,
+    so the first user does not wait for them."""
+    knowledge_base.search("warm up")
+    listings.load_listings()
+    yield
+
+
+app = FastAPI(title="DarGlobal & Wasalt Property Assistant", lifespan=lifespan)
 
 
 class ChatMessage(BaseModel):
