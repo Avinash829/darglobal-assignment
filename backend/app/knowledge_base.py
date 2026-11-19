@@ -26,6 +26,7 @@ MAX_KEYWORD_TITLES = 4           # pages added by name match per question
 KEYWORD_RESULTS_PER_NAME = 2     # pages per matched word
 KEYWORD_MATCH_DISTANCE = 0.3     # exact name matches count as highly relevant
 WASALT_CITY_TITLE_PREFIX = "Wasalt properties in "
+MAX_DISTRICTS_PER_CATEGORY = 15  # keeps city documents short and answers readable
 
 # Common words in page titles that are not names, so they are not used for keyword search.
 GENERIC_TITLE_WORDS = {
@@ -137,8 +138,12 @@ def wasalt_city_documents() -> list[dict]:
 
     documents = []
     for city, groups in districts.items():
-        lines = [f"- {group.capitalize()} in {city}: {', '.join(sorted(names))}"
-                 for group, names in sorted(groups.items(), key=lambda item: -len(item[1]))]
+        lines = []
+        for group, names in sorted(groups.items(), key=lambda item: -len(item[1])):
+            shown = sorted(names)[:MAX_DISTRICTS_PER_CATEGORY]
+            more = len(names) - len(shown)
+            lines.append(f"- {group.capitalize()} in {city} ({len(names)} districts): {', '.join(shown)}"
+                         + (f", and {more} more" if more else ""))
         text = f"Wasalt properties in {city}, Saudi Arabia. Districts with listings, by category:\n" + "\n".join(lines)
         documents.append({"text": text, "source": "Wasalt", "title": WASALT_CITY_TITLE_PREFIX + city,
                           "url": city_urls.get(city, "https://wasalt.sa/en")})
@@ -163,6 +168,8 @@ def build_index() -> None:
         client.delete_collection(COLLECTION_NAME)  # always rebuild from scratch
     collection = client.create_collection(COLLECTION_NAME)
 
+    # Bulk indexing uses every CPU thread; answering questions uses one (see LightweightEmbedder).
+    bulk_embedder = ONNXMiniLM_L6_V2(preferred_providers=["CPUExecutionProvider"])
     batch_size = 200
     for start in range(0, len(documents), batch_size):
         batch = documents[start:start + batch_size]
@@ -170,7 +177,7 @@ def build_index() -> None:
         collection.add(
             ids=[f"doc-{start + i}" for i in range(len(batch))],
             documents=texts,
-            embeddings=get_embedder()(texts),
+            embeddings=bulk_embedder(texts),
             metadatas=[{"source": doc["source"], "title": doc["title"], "url": doc["url"]} for doc in batch],
         )
         print(f"Indexed {start + len(batch)}/{len(documents)}")
