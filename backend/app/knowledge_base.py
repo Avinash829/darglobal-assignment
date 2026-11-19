@@ -10,9 +10,10 @@ ChromaDB embeds the text itself with its built-in local model
 """
 
 import json
+import os
 import re
 from collections import Counter, defaultdict
-from functools import lru_cache
+from functools import cached_property, lru_cache
 
 import chromadb
 from chromadb.utils.embedding_functions.onnx_mini_lm_l6_v2 import ONNXMiniLM_L6_V2
@@ -182,10 +183,29 @@ def get_collection() -> chromadb.Collection:
     return client.get_collection(COLLECTION_NAME)
 
 
+class LightweightEmbedder(ONNXMiniLM_L6_V2):
+    """
+    ChromaDB's local embedding model, limited to one CPU thread.
+
+    By default ONNX Runtime starts one thread per CPU core of the *host* machine.
+    On small cloud containers (a fraction of one CPU) those threads fight each
+    other and a single embedding becomes very slow. One sentence needs one thread.
+    """
+
+    @cached_property
+    def model(self):
+        options = self.ort.SessionOptions()
+        options.intra_op_num_threads = 1
+        options.inter_op_num_threads = 1
+        options.log_severity_level = 3
+        model_path = os.path.join(self.DOWNLOAD_PATH, self.EXTRACTED_FOLDER_NAME, "model.onnx")
+        return self.ort.InferenceSession(model_path, providers=["CPUExecutionProvider"], sess_options=options)
+
+
 @lru_cache(maxsize=1)
-def get_embedder() -> ONNXMiniLM_L6_V2:
-    """The same local model ChromaDB used to build the index."""
-    return ONNXMiniLM_L6_V2(preferred_providers=["CPUExecutionProvider"])
+def get_embedder() -> LightweightEmbedder:
+    """The same local model ChromaDB used to build the index, loaded once."""
+    return LightweightEmbedder(preferred_providers=["CPUExecutionProvider"])
 
 
 @lru_cache(maxsize=1)

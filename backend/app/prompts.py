@@ -13,7 +13,8 @@ Rules:
 3. Wasalt listing data comes from public sitemaps: it includes property type,
    purpose, size, bedrooms and facing, but NOT prices or exact city per listing.
    Say so when a user asks for prices of Wasalt listings.
-4. Keep answers short and clear. Use bullet points for lists.
+4. Keep answers short and clear. Use bullet points for lists. If a list has more than
+   10 items, show the 10 most relevant and say how many more there are.
 5. Add the relevant links as markdown, e.g. [Project name](url).
 """
 
