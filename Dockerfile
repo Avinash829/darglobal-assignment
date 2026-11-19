@@ -9,7 +9,7 @@ RUN npm run build
 # ---------- Stage 2: Python API that also serves the built frontend ----------
 FROM python:3.12-slim
 
-# Hugging Face Spaces runs containers as user 1000.
+# Run as a normal user, not root.
 RUN useradd -m -u 1000 user
 USER user
 ENV HOME=/home/user \
@@ -28,5 +28,6 @@ COPY --chown=user data/ data/
 COPY --from=frontend --chown=user /frontend/dist frontend/dist
 
 WORKDIR /home/user/app/backend
+# Hosting platforms (e.g. Render) pass the port in $PORT; 7860 is the local default.
 EXPOSE 7860
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "7860"]
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-7860}"]

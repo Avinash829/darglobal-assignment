@@ -1,19 +1,9 @@
----
-title: DarGlobal Wasalt Property Assistant
-emoji: 🏙️
-colorFrom: yellow
-colorTo: gray
-sdk: docker
-app_port: 7860
-pinned: false
----
-
 # DarGlobal & Wasalt Property Assistant
 
 An AI chatbot that answers questions about **DarGlobal** luxury developments and
 **Wasalt** property listings, using only publicly available data from both sites.
 
-**Live demo:** https://avinash829-darglobal-chatbot.hf.space
+**Live demo:** _link added after deployment_
 
 ## Try asking
 
@@ -54,7 +44,7 @@ because free OpenRouter models have a daily request limit.
 | LLM | OpenRouter free models: Nemotron 3.5 Super, Ling 3.2 Flash, Nemotron 3 Ultra (automatic fallback) |
 | Backend | FastAPI, Server-Sent Events streaming |
 | Frontend | React (Vite), react-markdown |
-| Deployment | Docker (multi-stage build) on Hugging Face Spaces |
+| Deployment | Docker (multi-stage build) on Render |
 
 ## Data collected
 
